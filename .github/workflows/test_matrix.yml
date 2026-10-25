@@ -1,0 +1,37 @@
+name: Test Compositions against both Crossplane v1 and v2
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: test (crossplane ${{ matrix.xp_version || 'latest' }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # an empty version installs the latest stable version
+        xp_version: ["v1.20.14", ""]
+    env:
+      COMPRESSED: true
+      VERIFY_SHA: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up the PATH
+        run: |
+          mkdir -p "$HOME/bin"
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+      - name: Install Crossplane CLI
+        env:
+          XP_VERSION: ${{ matrix.xp_version }}  # empty defaults to the current version of the stable channel
+        run: |
+          cd "$HOME/bin"
+          curl -sfL "https://cli.crossplane.io/install.sh" | sh
+      - name: Install xprin
+        # env:
+        #   VERSION: vX.Y.Z  # defaults to the latest stable version
+        run: |
+          cd "$HOME/bin"
+          curl -sL https://raw.githubusercontent.com/crossplane-contrib/xprin/main/install.sh | sh
+      - name: Check xprin dependencies
+        run: xprin check
+      - name: Run tests
+        run: xprin test -qv --show-render --show-validate --show-assertions --show-hooks tests/

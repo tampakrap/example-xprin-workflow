@@ -1,0 +1,20 @@
+tests:
+- name: "Initial reconciliation loop"
+  inputs:
+    xr: ../examples/xr.yaml
+    composition: ../examples/composition.yaml
+    functions: ../examples/functions.yaml
+    crds:
+    - ../examples/xrd.yaml
+    - ../crossplane.yaml
+  assertions:
+    xprin:
+    - name: "XR and Object are rendered"
+      type: "Count"
+      value: 2
+    - name: "Object wraps a Namespace named after the XR's spec.name"
+      type: "FieldValue"
+      resource: "Object/my-namespace"
+      field: "spec.forProvider.manifest.metadata.name"
+      operator: "=="
+      value: "my-namespace"
